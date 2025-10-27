@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=CoreMon
+Comment=Monitor CPU temperature and load
+Exec=cpumon
+Icon=utilities-system-monitor
+Terminal=false
+Type=Application
+Categories=System;Utility;Monitor;
+StartupNotify=true
+Keywords=cpu;temperature;monitor;system;
