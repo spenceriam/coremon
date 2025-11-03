@@ -20,6 +20,7 @@ setup(
         "psutil>=5.7.0",
         "matplotlib>=3.3.0",
         "numpy>=1.19.0",
+        "neofetch",
     ],
     entry_points={
         "console_scripts": [

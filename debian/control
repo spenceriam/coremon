@@ -15,7 +15,8 @@ Depends: ${python3:Depends}, ${misc:Depends},
          python3-numpy,
          gir1.2-gtk-3.0,
          gir1.2-appindicator3-0.1,
-         libappindicator3-1
+         libappindicator3-1,
+         neofetch
 Description: system monitoring tool for Ubuntu/Zorin OS
  CoreMon displays real-time CPU temperature and load with graphs,
  system tray integration, and configurable thresholds. Designed for

@@ -2,6 +2,7 @@ coremon (1.0.1-1) unstable; urgency=high
 
   * Fix hardcoded development paths in desktop file and launch script
   * Add universal CPU sensor support (Intel, AMD, ARM)
+  * Add neofetch as dependency for System Info functionality
   * Fix critical bug preventing installation on non-development machines
   * Closes: #1
 
