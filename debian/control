@@ -1,0 +1,22 @@
+Source: coremon
+Section: utils
+Priority: optional
+Maintainer: CoreMon Team <support@example.com>
+Build-Depends: debhelper-compat (= 13), dh-python, python3-setuptools, python3-all
+Standards-Version: 4.6.0
+Homepage: https://github.com/yourusername/coremon
+
+Package: coremon
+Architecture: any
+Depends: ${python3:Depends}, ${misc:Depends},
+         python3-gi,
+         python3-psutil,
+         python3-matplotlib,
+         python3-numpy,
+         gir1.2-gtk-3.0,
+         gir1.2-appindicator3-0.1,
+         libappindicator3-1
+Description: system monitoring tool for Ubuntu/Zorin OS
+ CoreMon displays real-time CPU temperature and load with graphs,
+ system tray integration, and configurable thresholds. Designed for
+ Ubuntu-based distributions.

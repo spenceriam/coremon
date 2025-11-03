@@ -1,0 +1,2 @@
+[console_scripts]
+coremon = coremon.main:main

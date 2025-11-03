@@ -1,0 +1,22 @@
+coremon (1.0.0-1.2) unstable; urgency=medium
+
+  * Non-maintainer upload.
+  * Packaging updates.
+
+ -- Spencer Francisco <contact@lionmystic.com>  Sun, 02 Nov 2025 19:49:41 -0600
+
+coremon (1.0.0-1.1) unstable; urgency=medium
+
+  * Non-maintainer upload.
+  * Packaging updates.
+
+ -- Spencer Francisco <spencer@Spencer-Thinkpad>  Sun, 02 Nov 2025 19:48:43 -0600
+
+coremon (1.0.0-1) unstable; urgency=medium
+
+  * Initial release.
+  * Real-time CPU temperature/load monitoring.
+  * GTK3 UI with graphs and system tray integration.
+  * Configurable thresholds and unit options.
+
+ -- CoreMon Team <support@example.com>  Tue, 28 Oct 2025 19:40:00 -0500

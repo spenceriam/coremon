@@ -1,0 +1,13 @@
+a449be47dcdac81f427b2fb4220c3a21  usr/bin/coremon
+7882fc2f0be00e66ab8107d07a659580  usr/bin/coremon.sh
+57227d7ea180525e3df9f108693461fd  usr/lib/python3/dist-packages/coremon-1.0.0.egg-info/PKG-INFO
+68b329da9893e34099c7d8ad5cb9c940  usr/lib/python3/dist-packages/coremon-1.0.0.egg-info/dependency_links.txt
+7b5945e91fac3e9e174395ee16f3e730  usr/lib/python3/dist-packages/coremon-1.0.0.egg-info/entry_points.txt
+d41d8cd98f00b204e9800998ecf8427e  usr/lib/python3/dist-packages/coremon-1.0.0.egg-info/requires.txt
+d6b3addc3d572d81c8786a224f30db57  usr/lib/python3/dist-packages/coremon-1.0.0.egg-info/top_level.txt
+1b0c142d7a2be19b442168f22ce78348  usr/lib/python3/dist-packages/coremon/main.py
+5e1f7bc6f276ecc2991614bc09420087  usr/lib/python3/dist-packages/cpumon/__init__.py
+5134ab29569f4f8608a6c13c7fcf1cb7  usr/lib/python3/dist-packages/cpumon/main.py
+68350531d35be40a469bd3065388940f  usr/lib/python3/dist-packages/cpumon/setup.py
+5a3a2777f837f98b3886594f0b4cb89c  usr/share/applications/coremon.desktop
+a73e370df467db924d4899321e1ca85c  usr/share/doc/coremon/changelog.Debian.gz

@@ -34,21 +34,4 @@ setup(
     url="https://github.com/yourusername/coremon",
 )
 
-# Create desktop entry
-desktop_entry = """[Desktop Entry]
-Name=CoreMon
-Comment=Monitor CPU temperature and load
-Exec=coremon
-Icon=coremon
-Terminal=false
-Type=Application
-Categories=System;Utility;
-StartupNotify=true
-"""
-
-desktop_file = os.path.expanduser('~/.local/share/applications/coremon.desktop')
-with open(desktop_file, 'w') as f:
-    f.write(desktop_entry)
-
-print("CoreMon has been installed successfully!")
-print("You can now launch it from your applications menu or by running 'coremon' in the terminal.")
+# Desktop file is handled by debian packaging

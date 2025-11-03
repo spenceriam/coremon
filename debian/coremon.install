@@ -1,0 +1,3 @@
+coremon.desktop usr/share/applications/
+coremon.sh usr/bin/
+coremon usr/lib/python3/dist-packages/
