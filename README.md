@@ -2,6 +2,16 @@
 
 CoreMon is a lightweight system monitoring application designed for Zorin OS and other Ubuntu-based distributions. It provides real-time monitoring of CPU temperature and load, with a clean GTK-based interface.
 
+<img width="823" height="659" alt="Screenshot from 2025-11-02 20-06-50" src="https://github.com/user-attachments/assets/a26bc898-81b1-47e9-9ef1-9ac58259371e" />
+<img width="824" height="663" alt="Screenshot from 2025-11-02 20-07-07" src="https://github.com/user-attachments/assets/5b0b572f-791b-41ac-a7ac-ea7dbf33a155" />
+<img width="824" height="663" alt="Screenshot from 2025-11-02 20-07-21" src="https://github.com/user-attachments/assets/6a3ce818-e025-4014-b964-e225a48f30ac" />
+<img width="824" height="663" alt="Screenshot from 2025-11-02 20-07-25" src="https://github.com/user-attachments/assets/a5ebe1a9-6e75-47fe-b55c-beb2883869e4" />
+
+System tray:
+
+<img width="512" height="87" alt="Screenshot from 2025-11-02 20-06-58" src="https://github.com/user-attachments/assets/f06e69e1-46ea-408f-91b0-305809424f8f" />
+
+
 ## Features
 
 ### Core Monitoring
