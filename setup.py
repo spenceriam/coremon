@@ -6,24 +6,24 @@ import shutil
 from setuptools import setup, find_packages
 
 # Create necessary directories
-os.makedirs('build', exist_ok=True)
-os.makedirs('dist', exist_ok=True)
+os.makedirs("build", exist_ok=True)
+os.makedirs("dist", exist_ok=True)
 
 # Install the package
 setup(
     name="coremon",
-    version="1.0.0",
+    version="1.0.1",
     packages=find_packages(),
     include_package_data=True,
     install_requires=[
-        'PyGObject>=3.36.0',
-        'psutil>=5.7.0',
-        'matplotlib>=3.3.0',
-        'numpy>=1.19.0'
+        "PyGObject>=3.36.0",
+        "psutil>=5.7.0",
+        "matplotlib>=3.3.0",
+        "numpy>=1.19.0",
     ],
     entry_points={
-        'console_scripts': [
-            'coremon=coremon.main:main',
+        "console_scripts": [
+            "coremon=coremon.main:main",
         ],
     },
     author="CoreMon Team",

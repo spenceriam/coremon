@@ -1,3 +1,2 @@
 #!/bin/bash
-cd /home/spencer/Documents/GitHub/CascadeProjects/windsurf-project
-python3 coremon/main.py
+exec python3 -m coremon.main

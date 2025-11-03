@@ -1,3 +1,12 @@
+coremon (1.0.1-1) unstable; urgency=high
+
+  * Fix hardcoded development paths in desktop file and launch script
+  * Add universal CPU sensor support (Intel, AMD, ARM)
+  * Fix critical bug preventing installation on non-development machines
+  * Closes: #1
+
+ -- Spencer Francisco <contact@lionmystic.com>  Mon, 03 Nov 2025 06:22:39 +0000
+
 coremon (1.0.0-1.2) unstable; urgency=medium
 
   * Non-maintainer upload.
