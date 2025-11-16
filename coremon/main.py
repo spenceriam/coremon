@@ -30,6 +30,7 @@ CONFIG_FILE = os.path.join(CONFIG_DIR, "config.ini")
 class CoreMonApp(Gtk.Application):
     def __init__(self):
         super().__init__(application_id=APP_ID, flags=Gio.ApplicationFlags.FLAGS_NONE)
+        self.start_minimized_arg = False
 
         # Default settings
         self.settings = {
@@ -50,6 +51,19 @@ class CoreMonApp(Gtk.Application):
         self.load_settings()
         self.setup_data_structures()
         self.setup_indicator()
+
+    def do_command_line(self, command_line):
+        """Handle command line arguments"""
+        args = command_line.get_arguments()
+        
+        # Check for --minimized flag
+        if "--minimized" in args:
+            self.start_minimized_arg = True
+            print("Starting minimized due to --minimized flag")
+        
+        # Activate the application
+        self.activate()
+        return 0
 
     def setup_data_structures(self):
         self.max_data_points = 60  # Number of points to keep in history
@@ -107,6 +121,62 @@ class CoreMonApp(Gtk.Application):
         with open(CONFIG_FILE, "w") as configfile:
             config.write(configfile)
 
+    def setup_autostart(self, enable):
+        """Enable or disable autostart by creating/removing desktop file in ~/.config/autostart/"""
+        autostart_dir = os.path.expanduser("~/.config/autostart")
+        autostart_file = os.path.join(autostart_dir, "coremon.desktop")
+        
+        if enable:
+            # Create autostart directory if it doesn't exist
+            os.makedirs(autostart_dir, exist_ok=True)
+            
+            # Get the path to the coremon executable
+            # Try to find it in common locations
+            possible_paths = [
+                "/usr/bin/coremon",
+                "/usr/local/bin/coremon",
+                os.path.expanduser("~/bin/coremon"),
+            ]
+            
+            coremon_path = None
+            for path in possible_paths:
+                if os.path.isfile(path):
+                    coremon_path = path
+                    break
+            
+            # Fallback to python3 -m coremon if no executable found
+            if not coremon_path:
+                coremon_path = "python3 -m coremon"
+            
+            # Build the exec command with --minimized flag if start_minimized is enabled
+            exec_command = coremon_path
+            if self.settings.get("start_minimized", False):
+                exec_command += " --minimized"
+            
+            # Create desktop entry content
+            desktop_content = f"""[Desktop Entry]
+Type=Application
+Name=CoreMon
+Comment=System monitoring tool
+Exec={exec_command}
+Icon=temperature
+Terminal=false
+Categories=System;Monitor;
+X-GNOME-Autostart-enabled=true
+"""
+            
+            # Write the autostart desktop file
+            with open(autostart_file, "w") as f:
+                f.write(desktop_content)
+            
+            print(f"Autostart enabled: {autostart_file}")
+            
+        else:
+            # Remove the autostart file if it exists
+            if os.path.exists(autostart_file):
+                os.remove(autostart_file)
+                print(f"Autostart disabled: removed {autostart_file}")
+
     def do_activate(self):
         # Show the window
         self.win = CoreMonWindow(self)
@@ -115,7 +185,9 @@ class CoreMonApp(Gtk.Application):
         # Initialize menu label based on initial visibility
         self.update_menu_label()
 
-        if self.settings["start_minimized"]:
+        # Check both settings and command line argument for start minimized
+        should_start_minimized = self.settings["start_minimized"] or self.start_minimized_arg
+        if should_start_minimized:
             self.win.hide()
             self.show_hide_item.set_label("Show")
 
@@ -638,11 +710,6 @@ class CoreMonWindow(Gtk.ApplicationWindow):
         autostart_box.pack_end(self.autostart_switch, False, False, 0)
         settings_box.pack_start(autostart_box, False, False, 0)
 
-        # Save button
-        save_button = Gtk.Button(label="Save Settings")
-        save_button.connect("clicked", self.on_save_settings)
-        settings_box.pack_end(save_button, False, False, 0)
-
         # System Info tab
         system_info_box = Gtk.Box(
             orientation=Gtk.Orientation.VERTICAL, spacing=12, margin=12
@@ -910,35 +977,15 @@ class CoreMonWindow(Gtk.ApplicationWindow):
 
         # Save to config file
         self.app.save_settings()
+        
+        # Handle autostart setting change
+        self.app.setup_autostart(self.app.settings["autostart"])
 
         # Clear data to force refresh with new settings
         self.app.time_data.clear()
         for i in range(self.app.cpu_count):
             self.app.temp_data[i].clear()
             self.app.load_data[i].clear()
-
-    def on_save_settings(self, widget):
-        # Save window size
-        width, height = self.get_size()
-        self.app.settings["window_width"] = width
-        self.app.settings["window_height"] = height
-
-        # Save to config file
-        self.app.save_settings()
-
-        # Show confirmation
-        dialog = Gtk.MessageDialog(
-            parent=self,
-            flags=0,
-            message_type=Gtk.MessageType.INFO,
-            buttons=Gtk.ButtonsType.OK,
-            text="Settings saved",
-        )
-        dialog.format_secondary_text(
-            "Settings are applied immediately and will persist after restarting CoreMon."
-        )
-        dialog.run()
-        dialog.destroy()
 
     def start_monitoring(self):
         self.update_ui()
