@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-__version__ = "1.0.1"
+__version__ = "1.0.2"
 
 import gi
 
@@ -788,7 +788,7 @@ class CoreMonWindow(Gtk.ApplicationWindow):
 
         about_label = Gtk.Label()
         about_label.set_markup(
-            "<big><b>CoreMon v1.0</b></big>\n\n"
+            "<big><b>CoreMon v1.0.2</b></big>\n\n"
             "A simple temperature and load monitor for Ubuntu based OS.\n"
             "Designed to give you a quick view of your temps and load.\n\n"
             "© 2025 CoreMon Project"
