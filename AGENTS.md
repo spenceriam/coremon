@@ -13,8 +13,8 @@ CoreMon is a system monitoring tool for Zorin OS and Ubuntu-based distributions.
 ### Building Debian Package
 - Install build dependencies: `sudo apt install build-essential devscripts debhelper dh-python python3-all python3-setuptools`
 - Update changelog: `export DEBEMAIL="your-email@example.com" && dch --distribution unstable --increment "Description of changes"`
-- Build package: `dpkg-buildpackage -us -uc`
-- Copy .deb to project: `cp ../coremon_*.deb .`
+- Build package: `./build-installer.sh` (builds and places packages in installer/ directory)
+- Alternative manual build: `dpkg-buildpackage -us -uc` (outputs to parent directory)
 
 ### Testing
 - Run the application: `python3 coremon/main.py`
@@ -59,7 +59,7 @@ When making a new release:
    - Update `__version__` variable in `coremon/main.py`
    - Update About screen version display in `coremon/main.py` (search for "CoreMon vX.X.X")
 3. **Update Debian changelog**: Use `dch --distribution unstable --increment "Description"`
-4. **Build packages**: Run `dpkg-buildpackage -us -uc`
+4. **Build packages**: Run `./build-installer.sh` (places packages in installer/ directory)
 5. **Test installation**: Verify both package installation and version display in About screen
 
 **Important**: Always keep version numbers synchronized across:
