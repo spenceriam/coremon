@@ -1,0 +1,12 @@
+#!/bin/sh
+set -e
+
+# Remove autostart desktop file if it exists
+AUTOSTART_FILE="$HOME/.config/autostart/coremon.desktop"
+if [ -f "$AUTOSTART_FILE" ]; then
+    echo "Removing autostart desktop file..."
+    rm -f "$AUTOSTART_FILE"
+fi
+
+#DEBHELPER#
+exit 0

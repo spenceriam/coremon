@@ -49,6 +49,7 @@ class CoreMonApp(Gtk.Application):
         }
 
         self.load_settings()
+        self.ensure_default_config()  # Ensure config file exists
         self.setup_data_structures()
         self.setup_indicator()
 
@@ -120,6 +121,13 @@ class CoreMonApp(Gtk.Application):
 
         with open(CONFIG_FILE, "w") as configfile:
             config.write(configfile)
+
+    def ensure_default_config(self):
+        """Ensure a default config file exists with proper settings"""
+        if not os.path.exists(CONFIG_FILE):
+            print("No configuration file found, creating default settings...")
+            self.save_settings()
+            print(f"Default configuration created at {CONFIG_FILE}")
 
     def setup_autostart(self, enable):
         """Enable or disable autostart by creating/removing desktop file in ~/.config/autostart/"""
