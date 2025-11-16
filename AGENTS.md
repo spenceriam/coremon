@@ -59,8 +59,8 @@ When making a new release:
    - Update `__version__` variable in `coremon/main.py`
    - Update About screen version display in `coremon/main.py` (search for "CoreMon vX.X.X")
 3. **Update Debian changelog**: Use `dch --distribution unstable --increment "Description"`
-4. **Build packages**: Run `./build-installer.sh` (places packages in installer/ directory)
-5. **Test installation**: Verify both package installation and version display in About screen
+4. **Build packages**: Run `./build-installer.sh` (creates universal installer in installer/ directory)
+5. **Test installation**: Verify universal installer works and version displays correctly in About screen
 
 **Important**: Always keep version numbers synchronized across:
 - `setup.py` (Python package version)

@@ -1,11 +1,14 @@
 #!/bin/bash
 
 # CoreMon Installer Build Script
-# This script builds Debian packages and places them in the installer directory
+# This script builds universal Debian packages and places them in the installer directory
 
 set -e
 
-echo "Building CoreMon Debian packages..."
+# Get version from setup.py
+VERSION=$(grep "version=" setup.py | sed "s/.*version='\([^']*\)'.*/\1/")
+
+echo "Building CoreMon universal Debian package (version $VERSION)..."
 
 # Create installer directory if it doesn't exist
 mkdir -p installer
@@ -14,20 +17,32 @@ mkdir -p installer
 echo "Cleaning up existing build artifacts..."
 rm -f ../coremon_*.deb ../coremon_*.changes ../coremon_*.buildinfo ../coremon_*.dsc ../coremon_*.tar.gz
 
+# Temporarily modify debian/control to force universal architecture
+echo "Configuring for universal architecture..."
+cp debian/control debian/control.backup
+sed -i 's/Architecture: any/Architecture: all/' debian/control
+
 # Build the Debian package
-echo "Building Debian package..."
+echo "Building universal Debian package..."
 dpkg-buildpackage -us -uc
 
-# Move all build artifacts to installer directory
-echo "Moving build artifacts to installer directory..."
-mv -f ../coremon_*.deb installer/ 2>/dev/null || true
+# Restore original debian/control
+mv -f debian/control.backup debian/control
+
+# Move and rename the universal package
+echo "Moving and renaming universal package..."
+if ls ../coremon_*_all.deb 1> /dev/null 2>&1; then
+    mv -f ../coremon_*_all.deb "installer/coremon_1.0.2-1_x64_arm64.deb"
+fi
+
+# Move other artifacts with original names
 mv -f ../coremon_*.changes installer/ 2>/dev/null || true
 mv -f ../coremon_*.buildinfo installer/ 2>/dev/null || true
 mv -f ../coremon_*.dsc installer/ 2>/dev/null || true
 mv -f ../coremon_*.tar.gz installer/ 2>/dev/null || true
 
-echo "Build complete! Installer files are in the installer/ directory:"
+echo "Build complete! Universal installer file is in the installer/ directory:"
 ls -la installer/
 
 echo ""
-echo "To install locally, run: sudo apt install ./installer/coremon_*.deb"
+echo "To install locally, run: sudo apt install ./installer/coremon_1.0.2-1_x64_arm64.deb"
