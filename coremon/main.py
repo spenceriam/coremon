@@ -195,9 +195,13 @@ X-GNOME-Autostart-enabled=true
 
         # Check both settings and command line argument for start minimized
         should_start_minimized = self.settings["start_minimized"] or self.start_minimized_arg
+        
         if should_start_minimized:
+            # Hide the window after it's shown for minimized start
             self.win.hide()
+            self.win.set_skip_taskbar_hint(True)
             self.show_hide_item.set_label("Show")
+        # else: window remains shown normally
 
     def setup_indicator(self):
         # Create system tray indicator with temperature icon

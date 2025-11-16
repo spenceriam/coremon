@@ -6,7 +6,7 @@
 set -e
 
 # Get version from setup.py
-VERSION=$(grep "version=" setup.py | sed "s/.*version='\([^']*\)'.*/\1/")
+VERSION=$(grep "version=" setup.py | sed "s/.*version=['\"]\([^'\"]*\)['\"].*/\1/")
 
 echo "Building CoreMon universal Debian package (version $VERSION)..."
 
