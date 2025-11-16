@@ -51,6 +51,23 @@ CoreMon is a system monitoring tool for Zorin OS and Ubuntu-based distributions.
 - System tray requires appropriate indicator support
 - Build artifacts appear in parent directory by default
 
+## Versioning Process
+When making a new release:
+
+1. **Update version in setup.py**: Change the version string
+2. **Update application version**: 
+   - Update `__version__` variable in `coremon/main.py`
+   - Update About screen version display in `coremon/main.py` (search for "CoreMon vX.X.X")
+3. **Update Debian changelog**: Use `dch --distribution unstable --increment "Description"`
+4. **Build packages**: Run `dpkg-buildpackage -us -uc`
+5. **Test installation**: Verify both package installation and version display in About screen
+
+**Important**: Always keep version numbers synchronized across:
+- `setup.py` (Python package version)
+- `coremon/main.py` `__version__` variable
+- `coremon/main.py` About screen display
+- `debian/changelog` (Debian package version)
+
 ## Git Workflow
 - Main branch: `main`
 - Commit format: Conventional commits preferred
