@@ -1,7 +1,7 @@
 [Desktop Entry]
 Name=CoreMon
 Comment=Monitor CPU temperature and load
-Exec=python3 /home/spencer/Documents/GitHub/CascadeProjects/windsurf-project/coremon/main.py
+Exec=coremon
 Icon=applications-system
 Terminal=false
 Type=Application

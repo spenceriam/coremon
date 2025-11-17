@@ -1,12 +1,46 @@
 #!/bin/sh
 set -e
 
+echo "Cleaning up CoreMon configuration..."
+
+# Get the actual user who initiated the package removal
+# When running as root during package removal, we need to find the original user
+if [ -n "$SUDO_USER" ]; then
+    REAL_USER="$SUDO_USER"
+elif [ -n "$USER" ] && [ "$USER" != "root" ]; then
+    REAL_USER="$USER"
+else
+    # Try to find the user who owns the X session or a logged in user
+    REAL_USER=$(logname 2>/dev/null || echo "$(ls -la /home | head -n 2 | tail -n 1 | awk '{print $3}')")
+fi
+
+# Remove autostart desktop file if it exists
+AUTOSTART_FILE="/home/$REAL_USER/.config/autostart/coremon.desktop"
+if [ -f "$AUTOSTART_FILE" ]; then
+    echo "Removing autostart desktop file for user $REAL_USER..."
+    rm -f "$AUTOSTART_FILE"
+fi
+
+# Remove entire CoreMon configuration directory
+CONFIG_DIR="/home/$REAL_USER/.config/coremon"
+if [ -d "$CONFIG_DIR" ]; then
+    echo "Removing CoreMon configuration directory for user $REAL_USER..."
+    rm -rf "$CONFIG_DIR"
+fi
+
+echo "CoreMon configuration cleanup complete."
+
+# Include debhelper cleanup (this is important!)
+
 # Automatically added by dh_python3
 if command -v py3clean >/dev/null 2>&1; then
-	py3clean -p coremon:amd64 
+	py3clean -p coremon 
 else
-	dpkg -L coremon:amd64 | sed -En -e '/^(.*)\/(.+)\.py$/s,,rm "\1/__pycache__/\2".*,e'
+	dpkg -L coremon | sed -En -e '/^(.*)\/(.+)\.py$/s,,rm "\1/__pycache__/\2".*,e'
 	find /usr/lib/python3/dist-packages/ -type d -name __pycache__ -empty -print0 | xargs --null --no-run-if-empty rmdir
 fi
 
 # End automatically added section
+
+
+exit 0

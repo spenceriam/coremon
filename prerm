@@ -31,6 +31,26 @@ fi
 echo "CoreMon configuration cleanup complete."
 
 # Include debhelper cleanup (this is important!)
-#DEBHELPER#
+
+# Automatically added by dh_python3
+if command -v py3clean >/dev/null 2>&1; then
+	# Check if the package is actually installed before trying to clean it
+	if dpkg-query -W -f='${Status}' coremon 2>/dev/null | grep -q "install ok installed"; then
+		py3clean -p coremon 
+	else
+		echo "CoreMon package not found, skipping Python cleanup"
+	fi
+else
+	# Check if the package is actually installed before trying to list its files
+	if dpkg-query -W -f='${Status}' coremon 2>/dev/null | grep -q "install ok installed"; then
+		dpkg -L coremon | sed -En -e '/^(.*)\/(.+)\.py$/s,,rm "\1/__pycache__/\2".*,e'
+		find /usr/lib/python3/dist-packages/ -type d -name __pycache__ -empty -print0 | xargs --null --no-run-if-empty rmdir
+	else
+		echo "CoreMon package not found, skipping Python cache cleanup"
+	fi
+fi
+
+# End automatically added section
+
 
 exit 0
