@@ -51,6 +51,34 @@ CoreMon is a system monitoring tool for Zorin OS and Ubuntu-based distributions.
 - System tray requires appropriate indicator support
 - Build artifacts appear in parent directory by default
 
+## Current Issues (November 2025)
+
+### Critical Issue: Settings Not Persisting
+**Status: NOT WORKING - CRITICAL**
+- **Problem**: Configuration changes made in the UI are not being saved to the config file
+- **Symptoms**: 
+  - When users toggle "Start minimized" or "Start on login" settings, they revert to defaults after restart
+  - Configuration file at `~/.config/coremon/config.ini` remains unchanged
+  - Autostart desktop file is not created when "Start on login" is enabled
+- **Root Cause**: Unknown - `on_setting_changed` handler is connected but settings are not persisting
+- **Debug Status**: No error messages shown in console when settings are changed
+
+### Recently Fixed: Autostart Cleanup During Uninstall
+**Status: WORKING**
+- **Fixed**: prerm script now properly detects user and cleans up configuration files during uninstall
+- **Files Modified**: 
+  - `debian/coremon.prerm` - Added proper user detection logic
+  - `prerm` - Fixed file paths to use actual user directory instead of $HOME
+- **Verified**: Autostart desktop file and config directory are properly removed during package uninstall
+
+### Testing Status
+- Installation: ✅ Working
+- Application Launch: ✅ Working  
+- Default Config Creation: ✅ Working
+- Settings Persistence: ❌ NOT WORKING
+- Autostart Creation: ❌ NOT WORKING
+- Autostart Cleanup: ✅ Working
+
 ## Versioning Process
 When making a new release:
 
