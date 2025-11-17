@@ -19,5 +19,7 @@ fi
 
 echo "CoreMon configuration cleanup complete."
 
+# Include debhelper cleanup (this is important!)
 #DEBHELPER#
+
 exit 0
