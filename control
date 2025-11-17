@@ -2,7 +2,7 @@ Package: coremon
 Version: 1.0.2-1
 Architecture: all
 Maintainer: CoreMon Team <support@example.com>
-Installed-Size: 105
+Installed-Size: 103
 Depends: python3-gi, python3-matplotlib, python3-numpy, python3-psutil, python3:any, gir1.2-gtk-3.0, gir1.2-appindicator3-0.1, libappindicator3-1, neofetch
 Section: utils
 Priority: optional

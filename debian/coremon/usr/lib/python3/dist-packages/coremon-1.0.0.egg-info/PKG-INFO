@@ -1,9 +1,0 @@
-Metadata-Version: 2.1
-Name: coremon
-Version: 1.0.0
-Summary: A system monitoring tool for Zorin OS and Ubuntu
-Home-page: https://github.com/yourusername/coremon
-Author: CoreMon Team
-Author-email: support@example.com
-License: GPL-3.0
-Keywords: monitoring cpu temperature load system

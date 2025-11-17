@@ -1,3 +1,5 @@
+#!/bin/sh
+set -e
 
 # Automatically added by dh_python3
 if command -v py3compile >/dev/null 2>&1; then
@@ -8,3 +10,9 @@ if command -v pypy3compile >/dev/null 2>&1; then
 fi
 
 # End automatically added section
+
+echo "CoreMon installation complete!"
+echo "Note: User configuration will be created when you first run coremon."
+
+#DEBHELPER#
+exit 0

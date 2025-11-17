@@ -12,7 +12,7 @@ os.makedirs("dist", exist_ok=True)
 # Install the package
 setup(
     name="coremon",
-    version="1.0.1",
+    version="1.0.2",
     packages=find_packages(),
     include_package_data=True,
     install_requires=[

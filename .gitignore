@@ -139,8 +139,14 @@ debian/debhelper-build-stamp
 debian/files
 debian/coremon/
 
+# Release/installer directory (for manual release uploads)
+installer/
+
 # Python build artifacts
 .pybuild/
+
+# Factory build artifacts
+.factory/
 
 # Release notes (internal)
 RELEASE_NOTES_*.md

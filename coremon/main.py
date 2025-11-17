@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
-__version__ = "1.0.1"
+__version__ = "1.0.2"
 
 import gi
+import traceback
 
 gi.require_version("Gtk", "3.0")
 gi.require_version("AppIndicator3", "0.1")
@@ -30,6 +31,7 @@ CONFIG_FILE = os.path.join(CONFIG_DIR, "config.ini")
 class CoreMonApp(Gtk.Application):
     def __init__(self):
         super().__init__(application_id=APP_ID, flags=Gio.ApplicationFlags.FLAGS_NONE)
+        self.start_minimized_arg = False
 
         # Default settings
         self.settings = {
@@ -48,8 +50,22 @@ class CoreMonApp(Gtk.Application):
         }
 
         self.load_settings()
+        self.ensure_default_config()  # Ensure config file exists
         self.setup_data_structures()
         self.setup_indicator()
+
+    def do_command_line(self, command_line):
+        """Handle command line arguments"""
+        args = command_line.get_arguments()
+        
+        # Check for --minimized flag
+        if "--minimized" in args:
+            self.start_minimized_arg = True
+            print("Starting minimized due to --minimized flag")
+        
+        # Activate the application
+        self.activate()
+        return 0
 
     def setup_data_structures(self):
         self.max_data_points = 60  # Number of points to keep in history
@@ -106,6 +122,87 @@ class CoreMonApp(Gtk.Application):
 
         with open(CONFIG_FILE, "w") as configfile:
             config.write(configfile)
+            configfile.flush()  # Force write to disk
+            os.fsync(configfile.fileno())  # Ensure OS writes to disk
+
+    def ensure_default_config(self):
+        """Ensure a default config file exists with proper settings"""
+        if not os.path.exists(CONFIG_FILE):
+            print("No configuration file found, creating default settings...")
+            self.save_settings()
+            print(f"Default configuration created at {CONFIG_FILE}")
+
+    def setup_autostart(self, enable):
+        """Enable or disable autostart by creating/removing desktop file in ~/.config/autostart/"""
+        try:
+            autostart_dir = os.path.expanduser("~/.config/autostart")
+            autostart_file = os.path.join(autostart_dir, "coremon.desktop")
+            
+            if enable:
+                print("DEBUG: Setting up autostart...")
+                # Create autostart directory if it doesn't exist
+                os.makedirs(autostart_dir, exist_ok=True)
+                
+                # Get the path to the coremon executable
+                # Try to find it in common locations
+                possible_paths = [
+                    "/usr/bin/coremon",
+                    "/usr/local/bin/coremon",
+                    os.path.expanduser("~/bin/coremon"),
+                ]
+                
+                coremon_path = None
+                for path in possible_paths:
+                    if os.path.isfile(path):
+                        coremon_path = path
+                        print(f"DEBUG: Found executable at {path}")
+                        break
+                
+                # Fallback to python3 -m coremon if no executable found
+                if not coremon_path:
+                    coremon_path = "python3 -m coremon"
+                    print("DEBUG: Using fallback python3 -m coremon")
+                
+                # Build the exec command with --minimized flag if start_minimized is enabled
+                exec_command = coremon_path
+                if self.settings.get("start_minimized", False):
+                    exec_command += " --minimized"
+                    print(f"DEBUG: Adding --minimized flag, exec: {exec_command}")
+                
+                # Create desktop entry content
+                desktop_content = f"""[Desktop Entry]
+Type=Application
+Name=CoreMon
+Comment=System monitoring tool
+Exec={exec_command}
+Icon=temperature
+Terminal=false
+Categories=System;Monitor;
+X-GNOME-Autostart-enabled=true
+"""
+                
+                # Write the autostart desktop file
+                print(f"DEBUG: Writing autostart file to {autostart_file}")
+                with open(autostart_file, "w") as f:
+                    f.write(desktop_content)
+                
+                print(f"Autostart enabled: {autostart_file}")
+                
+            else:
+                print("DEBUG: Removing autostart...")
+                # Remove the autostart file if it exists
+                if os.path.exists(autostart_file):
+                    print(f"DEBUG: Removing {autostart_file}")
+                    os.remove(autostart_file)
+                    print(f"Autostart disabled: removed {autostart_file}")
+                else:
+                    print("DEBUG: Autostart file not found, nothing to remove")
+                    
+        except Exception as e:
+            print(f"ERROR in setup_autostart: {e}")
+            # Don't crash the app - just log the error
+            # The setting will still be saved, but autostart might not work
+            print(f"WARNING: Autostart setup failed, but continuing...")
 
     def do_activate(self):
         # Show the window
@@ -115,9 +212,15 @@ class CoreMonApp(Gtk.Application):
         # Initialize menu label based on initial visibility
         self.update_menu_label()
 
-        if self.settings["start_minimized"]:
+        # Check both settings and command line argument for start minimized
+        should_start_minimized = self.settings["start_minimized"] or self.start_minimized_arg
+        
+        if should_start_minimized:
+            # Hide the window after it's shown for minimized start
             self.win.hide()
+            self.win.set_skip_taskbar_hint(True)
             self.show_hide_item.set_label("Show")
+        # else: window remains shown normally
 
     def setup_indicator(self):
         # Create system tray indicator with temperature icon
@@ -340,6 +443,9 @@ class CoreMonWindow(Gtk.ApplicationWindow):
         self.set_default_size(
             self.app.settings["window_width"], self.app.settings["window_height"]
         )
+
+        # Track previous autostart state for async handling
+        self._previous_autostart_state = self.app.settings.get("autostart", False)
 
         self.setup_ui()
         self.start_monitoring()
@@ -623,6 +729,7 @@ class CoreMonWindow(Gtk.ApplicationWindow):
         # Start minimized
         self.start_minimized_switch = Gtk.Switch()
         self.start_minimized_switch.set_active(self.app.settings["start_minimized"])
+        self.start_minimized_switch.connect("notify::active", self.on_setting_changed)
         minimized_box = Gtk.Box(spacing=12)
         minimized_label = Gtk.Label(label="Start minimized:")
         minimized_box.pack_start(minimized_label, False, False, 0)
@@ -632,16 +739,12 @@ class CoreMonWindow(Gtk.ApplicationWindow):
         # Autostart
         self.autostart_switch = Gtk.Switch()
         self.autostart_switch.set_active(self.app.settings["autostart"])
+        self.autostart_switch.connect("notify::active", self.on_setting_changed)
         autostart_box = Gtk.Box(spacing=12)
         autostart_label = Gtk.Label(label="Start on login:")
         autostart_box.pack_start(autostart_label, False, False, 0)
         autostart_box.pack_end(self.autostart_switch, False, False, 0)
         settings_box.pack_start(autostart_box, False, False, 0)
-
-        # Save button
-        save_button = Gtk.Button(label="Save Settings")
-        save_button.connect("clicked", self.on_save_settings)
-        settings_box.pack_end(save_button, False, False, 0)
 
         # System Info tab
         system_info_box = Gtk.Box(
@@ -720,8 +823,13 @@ class CoreMonWindow(Gtk.ApplicationWindow):
         notebook.append_page(about_box, Gtk.Label(label="About"))
 
         about_label = Gtk.Label()
+        # Get current date and time for build info
+        from datetime import datetime
+        build_datetime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        
         about_label.set_markup(
-            "<big><b>CoreMon v1.0</b></big>\n\n"
+            f"<big><b>CoreMon v1.0.2</b></big>\n\n"
+            f"Built: {build_datetime}\n\n"
             "A simple temperature and load monitor for Ubuntu based OS.\n"
             "Designed to give you a quick view of your temps and load.\n\n"
             "© 2025 CoreMon Project"
@@ -888,60 +996,112 @@ class CoreMonWindow(Gtk.ApplicationWindow):
             return f"{hours:02d}:{minutes:02d}:{secs:02d}"
 
     def on_setting_changed(self, widget):
-        # Apply settings immediately
-        self.app.settings["update_interval"] = self.interval_spin.get_value_as_int()
-        self.app.settings["temperature_unit"] = self.unit_combo.get_active_id()
-        self.app.settings["temp_threshold"] = (
-            self.temp_threshold_spin.get_value_as_int()
-        )
-        self.app.settings["load_threshold"] = (
-            self.load_threshold_spin.get_value_as_int()
-        )
-        self.app.settings["cores_to_monitor"] = self.core_combo.get_active_id()
-        self.app.settings["show_individual_cores"] = (
-            self.show_individual_cores_switch.get_active()
-        )
-        self.app.settings["smooth_graphs"] = self.smooth_graphs_switch.get_active()
-        self.app.settings["dashboard_avg_only"] = (
-            self.dashboard_avg_only_switch.get_active()
-        )
-        self.app.settings["start_minimized"] = self.start_minimized_switch.get_active()
-        self.app.settings["autostart"] = self.autostart_switch.get_active()
+        try:
+            print(f"DEBUG: on_setting_changed called with widget: {type(widget)}")
+            
+            # Store the OLD autostart state BEFORE updating settings
+            old_autostart_state = self.app.settings.get("autostart", False)
+            
+            # Apply settings immediately
+            self.app.settings["update_interval"] = self.interval_spin.get_value_as_int()
+            self.app.settings["temperature_unit"] = self.unit_combo.get_active_id()
+            self.app.settings["temp_threshold"] = (
+                self.temp_threshold_spin.get_value_as_int()
+            )
+            self.app.settings["load_threshold"] = (
+                self.load_threshold_spin.get_value_as_int()
+            )
+            self.app.settings["cores_to_monitor"] = self.core_combo.get_active_id()
+            self.app.settings["show_individual_cores"] = (
+                self.show_individual_cores_switch.get_active()
+            )
+            self.app.settings["smooth_graphs"] = self.smooth_graphs_switch.get_active()
+            self.app.settings["dashboard_avg_only"] = (
+                self.dashboard_avg_only_switch.get_active()
+            )
+            self.app.settings["start_minimized"] = self.start_minimized_switch.get_active()
+            
+            print(f"DEBUG: Setting autostart from switch: {self.autostart_switch.get_active()}")
+            self.app.settings["autostart"] = self.autostart_switch.get_active()
+            
+            print(f"DEBUG: Current settings - start_minimized: {self.app.settings['start_minimized']}, autostart: {self.app.settings['autostart']}")
 
-        # Save to config file
-        self.app.save_settings()
-
-        # Clear data to force refresh with new settings
-        self.app.time_data.clear()
-        for i in range(self.app.cpu_count):
-            self.app.temp_data[i].clear()
-            self.app.load_data[i].clear()
-
-    def on_save_settings(self, widget):
-        # Save window size
-        width, height = self.get_size()
-        self.app.settings["window_width"] = width
-        self.app.settings["window_height"] = height
-
-        # Save to config file
-        self.app.save_settings()
-
-        # Show confirmation
-        dialog = Gtk.MessageDialog(
-            parent=self,
-            flags=0,
-            message_type=Gtk.MessageType.INFO,
-            buttons=Gtk.ButtonsType.OK,
-            text="Settings saved",
-        )
-        dialog.format_secondary_text(
-            "Settings are applied immediately and will persist after restarting CoreMon."
-        )
-        dialog.run()
-        dialog.destroy()
+            # Save to config file
+            self.app.save_settings()
+            print("DEBUG: Settings saved successfully")
+            
+            # Handle autostart setting change in background thread to prevent UI blocking
+            if self.app.settings["autostart"] != old_autostart_state:
+                print(f"DEBUG: Autostart state changed from {old_autostart_state} to {self.app.settings['autostart']}")
+                self._handle_autostart_change_async()
+            else:
+                print("DEBUG: Autostart state unchanged, skipping async handling")
+                
+            # Update tracking variable AFTER the comparison
+            self._previous_autostart_state = self.app.settings["autostart"]
+            
+            # Clear data to force refresh with new settings
+            self.app.time_data.clear()
+            for i in range(self.app.cpu_count):
+                self.app.temp_data[i].clear()
+                self.app.load_data[i].clear()
+                
+            print("DEBUG: on_setting_changed completed successfully")
+            
+        except Exception as e:
+            print(f"ERROR in on_setting_changed: {e}")
+            print(f"ERROR traceback: {traceback.format_exc()}")
+            # Don't crash the app - just log the error
+            print("WARNING: Settings change failed, but continuing...")
 
     def start_monitoring(self):
         self.update_ui()
+
+    def _handle_autostart_change_async(self):
+        """Handle autostart changes in background thread to prevent UI blocking"""
+        from gi.repository import GLib
+        
+        def autostart_worker():
+            try:
+                print(f"DEBUG: Starting background autostart setup for {self.app.settings['autostart']}")
+                
+                # Give immediate UI feedback
+                GLib.idle_add(self._show_autostart_feedback, "Setting up autostart...")
+                
+                # Call the actual setup method
+                self.app.setup_autostart(self.app.settings["autostart"])
+                
+                # Update previous state
+                self._previous_autostart_state = self.app.settings["autostart"]
+                
+                # Give completion feedback
+                GLib.idle_add(self._show_autostart_feedback, "Autostart setup complete")
+                GLib.timeout_add(2000, self._hide_autostart_feedback)  # Hide after 2 seconds
+                
+                print("DEBUG: Background autostart setup complete")
+                
+            except Exception as e:
+                print(f"ERROR in background autostart: {e}")
+                GLib.idle_add(self._show_autostart_feedback, f"Autostart error: {str(e)}")
+                GLib.timeout_add(3000, self._hide_autostart_feedback)
+                self._previous_autostart_state = not self.app.settings["autostart"]  # Revert state
+            
+            return False  # Stop the timeout
+        
+        # Start the background thread
+        GLib.timeout_add(50, autostart_worker)  # Small delay to let UI update first
+    
+    def _show_autostart_feedback(self, message):
+        """Show immediate feedback to user during autostart operations"""
+        # For now, just print to console - you could add a status label later
+        print(f"AUTOSTART: {message}")
+        # You could also update a status label or show a notification here
+        return False  # Stop idle callback
+    
+    def _hide_autostart_feedback(self):
+        """Hide autostart feedback"""
+        print("AUTOSTART: Operation complete")
+        return False  # Stop timeout callback
 
     def update_ui(self):
         # Get current CPU data

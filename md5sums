@@ -5,7 +5,7 @@ db3ff09f9797fa2fde01ede1b1c00a10  usr/lib/python3/dist-packages/coremon-1.0.2.eg
 7b5945e91fac3e9e174395ee16f3e730  usr/lib/python3/dist-packages/coremon-1.0.2.egg-info/entry_points.txt
 cd849028afb2cb2a01717caec8bab65e  usr/lib/python3/dist-packages/coremon-1.0.2.egg-info/requires.txt
 d6b3addc3d572d81c8786a224f30db57  usr/lib/python3/dist-packages/coremon-1.0.2.egg-info/top_level.txt
-4922aae580220a9071c0ffe5b1c0f57f  usr/lib/python3/dist-packages/coremon/main.py
+db2c241749a9c9122488a2fa0b34ed9c  usr/lib/python3/dist-packages/coremon/main.py
 5e1f7bc6f276ecc2991614bc09420087  usr/lib/python3/dist-packages/cpumon/__init__.py
 5134ab29569f4f8608a6c13c7fcf1cb7  usr/lib/python3/dist-packages/cpumon/main.py
 68350531d35be40a469bd3065388940f  usr/lib/python3/dist-packages/cpumon/setup.py
