@@ -3,6 +3,7 @@
 __version__ = "1.0.2"
 
 import gi
+import traceback
 
 gi.require_version("Gtk", "3.0")
 gi.require_version("AppIndicator3", "0.1")
@@ -992,41 +993,60 @@ class CoreMonWindow(Gtk.ApplicationWindow):
             return f"{hours:02d}:{minutes:02d}:{secs:02d}"
 
     def on_setting_changed(self, widget):
-        # Apply settings immediately
-        self.app.settings["update_interval"] = self.interval_spin.get_value_as_int()
-        self.app.settings["temperature_unit"] = self.unit_combo.get_active_id()
-        self.app.settings["temp_threshold"] = (
-            self.temp_threshold_spin.get_value_as_int()
-        )
-        self.app.settings["load_threshold"] = (
-            self.load_threshold_spin.get_value_as_int()
-        )
-        self.app.settings["cores_to_monitor"] = self.core_combo.get_active_id()
-        self.app.settings["show_individual_cores"] = (
-            self.show_individual_cores_switch.get_active()
-        )
-        self.app.settings["smooth_graphs"] = self.smooth_graphs_switch.get_active()
-        self.app.settings["dashboard_avg_only"] = (
-            self.dashboard_avg_only_switch.get_active()
-        )
-        self.app.settings["start_minimized"] = self.start_minimized_switch.get_active()
-        self.app.settings["autostart"] = self.autostart_switch.get_active()
-        
-        # Track previous autostart state for async handling
-        self._previous_autostart_state = self.app.settings["autostart"]
+        try:
+            print(f"DEBUG: on_setting_changed called with widget: {type(widget)}")
+            
+            # Apply settings immediately
+            self.app.settings["update_interval"] = self.interval_spin.get_value_as_int()
+            self.app.settings["temperature_unit"] = self.unit_combo.get_active_id()
+            self.app.settings["temp_threshold"] = (
+                self.temp_threshold_spin.get_value_as_int()
+            )
+            self.app.settings["load_threshold"] = (
+                self.load_threshold_spin.get_value_as_int()
+            )
+            self.app.settings["cores_to_monitor"] = self.core_combo.get_active_id()
+            self.app.settings["show_individual_cores"] = (
+                self.show_individual_cores_switch.get_active()
+            )
+            self.app.settings["smooth_graphs"] = self.smooth_graphs_switch.get_active()
+            self.app.settings["dashboard_avg_only"] = (
+                self.dashboard_avg_only_switch.get_active()
+            )
+            self.app.settings["start_minimized"] = self.start_minimized_switch.get_active()
+            
+            print(f"DEBUG: Setting autostart from switch: {self.autostart_switch.get_active()}")
+            self.app.settings["autostart"] = self.autostart_switch.get_active()
+            
+            print(f"DEBUG: Current settings - start_minimized: {self.app.settings['start_minimized']}, autostart: {self.app.settings['autostart']}")
+            
+            # Track previous autostart state for async handling
+            self._previous_autostart_state = self.app.settings["autostart"]
 
-        # Save to config file
-        self.app.save_settings()
-        
-        # Handle autostart setting change in background thread to prevent UI blocking
-        if self.app.settings["autostart"] != self._previous_autostart_state:
-            self._handle_autostart_change_async()
-        
-        # Clear data to force refresh with new settings
-        self.app.time_data.clear()
-        for i in range(self.app.cpu_count):
-            self.app.temp_data[i].clear()
-            self.app.load_data[i].clear()
+            # Save to config file
+            self.app.save_settings()
+            print("DEBUG: Settings saved successfully")
+            
+            # Handle autostart setting change in background thread to prevent UI blocking
+            if self.app.settings["autostart"] != self._previous_autostart_state:
+                print("DEBUG: Autostart state changed, handling async")
+                self._handle_autostart_change_async()
+            else:
+                print("DEBUG: Autostart state unchanged, skipping async handling")
+            
+            # Clear data to force refresh with new settings
+            self.app.time_data.clear()
+            for i in range(self.app.cpu_count):
+                self.app.temp_data[i].clear()
+                self.app.load_data[i].clear()
+                
+            print("DEBUG: on_setting_changed completed successfully")
+            
+        except Exception as e:
+            print(f"ERROR in on_setting_changed: {e}")
+            print(f"ERROR traceback: {traceback.format_exc()}")
+            # Don't crash the app - just log the error
+            print("WARNING: Settings change failed, but continuing...")
 
     def start_monitoring(self):
         self.update_ui()
