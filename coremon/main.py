@@ -441,6 +441,9 @@ class CoreMonWindow(Gtk.ApplicationWindow):
             self.app.settings["window_width"], self.app.settings["window_height"]
         )
 
+        # Track previous autostart state for async handling
+        self._previous_autostart_state = self.app.settings.get("autostart", False)
+
         self.setup_ui()
         self.start_monitoring()
 
@@ -1008,13 +1011,17 @@ class CoreMonWindow(Gtk.ApplicationWindow):
         )
         self.app.settings["start_minimized"] = self.start_minimized_switch.get_active()
         self.app.settings["autostart"] = self.autostart_switch.get_active()
+        
+        # Track previous autostart state for async handling
+        self._previous_autostart_state = self.app.settings["autostart"]
 
         # Save to config file
         self.app.save_settings()
         
-        # Handle autostart setting change
-        self.app.setup_autostart(self.app.settings["autostart"])
-
+        # Handle autostart setting change in background thread to prevent UI blocking
+        if self.app.settings["autostart"] != self._previous_autostart_state:
+            self._handle_autostart_change_async()
+        
         # Clear data to force refresh with new settings
         self.app.time_data.clear()
         for i in range(self.app.cpu_count):
@@ -1023,6 +1030,52 @@ class CoreMonWindow(Gtk.ApplicationWindow):
 
     def start_monitoring(self):
         self.update_ui()
+
+    def _handle_autostart_change_async(self):
+        """Handle autostart changes in background thread to prevent UI blocking"""
+        from gi.repository import GLib
+        
+        def autostart_worker():
+            try:
+                print(f"DEBUG: Starting background autostart setup for {self.app.settings['autostart']}")
+                
+                # Give immediate UI feedback
+                GLib.idle_add(self._show_autostart_feedback, "Setting up autostart...")
+                
+                # Call the actual setup method
+                self.app.setup_autostart(self.app.settings["autostart"])
+                
+                # Update previous state
+                self._previous_autostart_state = self.app.settings["autostart"]
+                
+                # Give completion feedback
+                GLib.idle_add(self._show_autostart_feedback, "Autostart setup complete")
+                GLib.timeout_add(2000, self._hide_autostart_feedback)  # Hide after 2 seconds
+                
+                print("DEBUG: Background autostart setup complete")
+                
+            except Exception as e:
+                print(f"ERROR in background autostart: {e}")
+                GLib.idle_add(self._show_autostart_feedback, f"Autostart error: {str(e)}")
+                GLib.timeout_add(3000, self._hide_autostart_feedback)
+                self._previous_autostart_state = not self.app.settings["autostart"]  # Revert state
+            
+            return False  # Stop the timeout
+        
+        # Start the background thread
+        GLib.timeout_add(50, autostart_worker)  # Small delay to let UI update first
+    
+    def _show_autostart_feedback(self, message):
+        """Show immediate feedback to user during autostart operations"""
+        # For now, just print to console - you could add a status label later
+        print(f"AUTOSTART: {message}")
+        # You could also update a status label or show a notification here
+        return False  # Stop idle callback
+    
+    def _hide_autostart_feedback(self):
+        """Hide autostart feedback"""
+        print("AUTOSTART: Operation complete")
+        return False  # Stop timeout callback
 
     def update_ui(self):
         # Get current CPU data
