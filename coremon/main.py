@@ -800,8 +800,13 @@ class CoreMonWindow(Gtk.ApplicationWindow):
         notebook.append_page(about_box, Gtk.Label(label="About"))
 
         about_label = Gtk.Label()
+        # Get current date and time for build info
+        from datetime import datetime
+        build_datetime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        
         about_label.set_markup(
-            "<big><b>CoreMon v1.0.2</b></big>\n\n"
+            f"<big><b>CoreMon v1.0.2</b></big>\n\n"
+            f"Built: {build_datetime}\n\n"
             "A simple temperature and load monitor for Ubuntu based OS.\n"
             "Designed to give you a quick view of your temps and load.\n\n"
             "© 2025 CoreMon Project"
