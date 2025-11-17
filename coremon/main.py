@@ -716,6 +716,7 @@ class CoreMonWindow(Gtk.ApplicationWindow):
         # Autostart
         self.autostart_switch = Gtk.Switch()
         self.autostart_switch.set_active(self.app.settings["autostart"])
+        self.autostart_switch.connect("notify::active", self.on_setting_changed)
         autostart_box = Gtk.Box(spacing=12)
         autostart_label = Gtk.Label(label="Start on login:")
         autostart_box.pack_start(autostart_label, False, False, 0)
