@@ -122,6 +122,8 @@ class CoreMonApp(Gtk.Application):
 
         with open(CONFIG_FILE, "w") as configfile:
             config.write(configfile)
+            configfile.flush()  # Force write to disk
+            os.fsync(configfile.fileno())  # Ensure OS writes to disk
 
     def ensure_default_config(self):
         """Ensure a default config file exists with proper settings"""
@@ -727,6 +729,7 @@ class CoreMonWindow(Gtk.ApplicationWindow):
         # Start minimized
         self.start_minimized_switch = Gtk.Switch()
         self.start_minimized_switch.set_active(self.app.settings["start_minimized"])
+        self.start_minimized_switch.connect("notify::active", self.on_setting_changed)
         minimized_box = Gtk.Box(spacing=12)
         minimized_label = Gtk.Label(label="Start minimized:")
         minimized_box.pack_start(minimized_label, False, False, 0)
@@ -996,6 +999,9 @@ class CoreMonWindow(Gtk.ApplicationWindow):
         try:
             print(f"DEBUG: on_setting_changed called with widget: {type(widget)}")
             
+            # Store the OLD autostart state BEFORE updating settings
+            old_autostart_state = self.app.settings.get("autostart", False)
+            
             # Apply settings immediately
             self.app.settings["update_interval"] = self.interval_spin.get_value_as_int()
             self.app.settings["temperature_unit"] = self.unit_combo.get_active_id()
@@ -1019,20 +1025,20 @@ class CoreMonWindow(Gtk.ApplicationWindow):
             self.app.settings["autostart"] = self.autostart_switch.get_active()
             
             print(f"DEBUG: Current settings - start_minimized: {self.app.settings['start_minimized']}, autostart: {self.app.settings['autostart']}")
-            
-            # Track previous autostart state for async handling
-            self._previous_autostart_state = self.app.settings["autostart"]
 
             # Save to config file
             self.app.save_settings()
             print("DEBUG: Settings saved successfully")
             
             # Handle autostart setting change in background thread to prevent UI blocking
-            if self.app.settings["autostart"] != self._previous_autostart_state:
-                print("DEBUG: Autostart state changed, handling async")
+            if self.app.settings["autostart"] != old_autostart_state:
+                print(f"DEBUG: Autostart state changed from {old_autostart_state} to {self.app.settings['autostart']}")
                 self._handle_autostart_change_async()
             else:
                 print("DEBUG: Autostart state unchanged, skipping async handling")
+                
+            # Update tracking variable AFTER the comparison
+            self._previous_autostart_state = self.app.settings["autostart"]
             
             # Clear data to force refresh with new settings
             self.app.time_data.clear()

@@ -53,18 +53,21 @@ CoreMon is a system monitoring tool for Zorin OS and Ubuntu-based distributions.
 
 ## Current Issues (November 2025)
 
-### Critical Issue: Settings Not Persisting
-**Status: NOT WORKING - CRITICAL**
-- **Problem**: Configuration changes made in the UI are not being saved to the config file
-- **Symptoms**: 
-  - When users toggle "Start minimized" or "Start on login" settings, they revert to defaults after restart
-  - Configuration file at `~/.config/coremon/config.ini` remains unchanged
-  - Autostart desktop file is not created when "Start on login" is enabled
-- **Root Cause**: Unknown - `on_setting_changed` handler is connected but settings are not persisting
-- **Debug Status**: No error messages shown in console when settings are changed
+### Issue: Settings Persistence and Autostart Creation
+**Status: RESOLVED - FIXED** ✅
+- **Fixed**: Settings now properly persist to config file when changed in UI
+- **Fixed**: Autostart desktop file is created when "Start on login" is enabled
+- **Root Causes Identified and Fixed**:
+  1. **Missing Signal Connection**: `start_minimized_switch` was created but never connected to `on_setting_changed`
+  2. **Logic Error**: `_previous_autostart_state` was set AFTER updating settings, making comparison always false
+  3. **File Write Buffering**: Added `flush()` and `fsync()` to ensure immediate disk writes
+- **Files Modified**: 
+  - `coremon/main.py` - Added signal connection and fixed state tracking logic
+  - `coremon/main.py` - Enhanced `save_settings()` with immediate disk sync
+- **Verified**: Settings persist across application restarts and autostart file is created/removed correctly
 
 ### Recently Fixed: Autostart Cleanup During Uninstall
-**Status: WORKING**
+**Status: WORKING** ✅
 - **Fixed**: prerm script now properly detects user and cleans up configuration files during uninstall
 - **Files Modified**: 
   - `debian/coremon.prerm` - Added proper user detection logic
@@ -75,8 +78,8 @@ CoreMon is a system monitoring tool for Zorin OS and Ubuntu-based distributions.
 - Installation: ✅ Working
 - Application Launch: ✅ Working  
 - Default Config Creation: ✅ Working
-- Settings Persistence: ❌ NOT WORKING
-- Autostart Creation: ❌ NOT WORKING
+- Settings Persistence: ✅ WORKING
+- Autostart Creation: ✅ WORKING
 - Autostart Cleanup: ✅ Working
 
 ## Versioning Process
