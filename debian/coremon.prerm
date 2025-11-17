@@ -1,12 +1,23 @@
 #!/bin/sh
 set -e
 
+echo "Cleaning up CoreMon configuration..."
+
 # Remove autostart desktop file if it exists
 AUTOSTART_FILE="$HOME/.config/autostart/coremon.desktop"
 if [ -f "$AUTOSTART_FILE" ]; then
     echo "Removing autostart desktop file..."
     rm -f "$AUTOSTART_FILE"
 fi
+
+# Remove entire CoreMon configuration directory
+CONFIG_DIR="$HOME/.config/coremon"
+if [ -d "$CONFIG_DIR" ]; then
+    echo "Removing CoreMon configuration directory..."
+    rm -rf "$CONFIG_DIR"
+fi
+
+echo "CoreMon configuration cleanup complete."
 
 #DEBHELPER#
 exit 0
