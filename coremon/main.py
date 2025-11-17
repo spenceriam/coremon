@@ -131,38 +131,43 @@ class CoreMonApp(Gtk.Application):
 
     def setup_autostart(self, enable):
         """Enable or disable autostart by creating/removing desktop file in ~/.config/autostart/"""
-        autostart_dir = os.path.expanduser("~/.config/autostart")
-        autostart_file = os.path.join(autostart_dir, "coremon.desktop")
-        
-        if enable:
-            # Create autostart directory if it doesn't exist
-            os.makedirs(autostart_dir, exist_ok=True)
+        try:
+            autostart_dir = os.path.expanduser("~/.config/autostart")
+            autostart_file = os.path.join(autostart_dir, "coremon.desktop")
             
-            # Get the path to the coremon executable
-            # Try to find it in common locations
-            possible_paths = [
-                "/usr/bin/coremon",
-                "/usr/local/bin/coremon",
-                os.path.expanduser("~/bin/coremon"),
-            ]
-            
-            coremon_path = None
-            for path in possible_paths:
-                if os.path.isfile(path):
-                    coremon_path = path
-                    break
-            
-            # Fallback to python3 -m coremon if no executable found
-            if not coremon_path:
-                coremon_path = "python3 -m coremon"
-            
-            # Build the exec command with --minimized flag if start_minimized is enabled
-            exec_command = coremon_path
-            if self.settings.get("start_minimized", False):
-                exec_command += " --minimized"
-            
-            # Create desktop entry content
-            desktop_content = f"""[Desktop Entry]
+            if enable:
+                print("DEBUG: Setting up autostart...")
+                # Create autostart directory if it doesn't exist
+                os.makedirs(autostart_dir, exist_ok=True)
+                
+                # Get the path to the coremon executable
+                # Try to find it in common locations
+                possible_paths = [
+                    "/usr/bin/coremon",
+                    "/usr/local/bin/coremon",
+                    os.path.expanduser("~/bin/coremon"),
+                ]
+                
+                coremon_path = None
+                for path in possible_paths:
+                    if os.path.isfile(path):
+                        coremon_path = path
+                        print(f"DEBUG: Found executable at {path}")
+                        break
+                
+                # Fallback to python3 -m coremon if no executable found
+                if not coremon_path:
+                    coremon_path = "python3 -m coremon"
+                    print("DEBUG: Using fallback python3 -m coremon")
+                
+                # Build the exec command with --minimized flag if start_minimized is enabled
+                exec_command = coremon_path
+                if self.settings.get("start_minimized", False):
+                    exec_command += " --minimized"
+                    print(f"DEBUG: Adding --minimized flag, exec: {exec_command}")
+                
+                # Create desktop entry content
+                desktop_content = f"""[Desktop Entry]
 Type=Application
 Name=CoreMon
 Comment=System monitoring tool
@@ -172,18 +177,29 @@ Terminal=false
 Categories=System;Monitor;
 X-GNOME-Autostart-enabled=true
 """
-            
-            # Write the autostart desktop file
-            with open(autostart_file, "w") as f:
-                f.write(desktop_content)
-            
-            print(f"Autostart enabled: {autostart_file}")
-            
-        else:
-            # Remove the autostart file if it exists
-            if os.path.exists(autostart_file):
-                os.remove(autostart_file)
-                print(f"Autostart disabled: removed {autostart_file}")
+                
+                # Write the autostart desktop file
+                print(f"DEBUG: Writing autostart file to {autostart_file}")
+                with open(autostart_file, "w") as f:
+                    f.write(desktop_content)
+                
+                print(f"Autostart enabled: {autostart_file}")
+                
+            else:
+                print("DEBUG: Removing autostart...")
+                # Remove the autostart file if it exists
+                if os.path.exists(autostart_file):
+                    print(f"DEBUG: Removing {autostart_file}")
+                    os.remove(autostart_file)
+                    print(f"Autostart disabled: removed {autostart_file}")
+                else:
+                    print("DEBUG: Autostart file not found, nothing to remove")
+                    
+        except Exception as e:
+            print(f"ERROR in setup_autostart: {e}")
+            # Don't crash the app - just log the error
+            # The setting will still be saved, but autostart might not work
+            print(f"WARNING: Autostart setup failed, but continuing...")
 
     def do_activate(self):
         # Show the window
